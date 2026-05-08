@@ -1,0 +1,235 @@
+/* ── Theming Variables ── */
+:root {
+	--bg-primary: #1a1a1a;
+	--bg-secondary: #282828;
+	--bg-tertiary: #111827;
+	--bg-layer-1: #282828;
+	--bg-layer-2: #1a1a1a;
+	--bg-fill-2: hsla(0,0%,100%,.14);
+	--bg-fill-3: hsla(0,0%,100%,.1);
+	--text-primary: #ffffff;
+	--text-secondary: #8a8a8a;
+	--text-tertiary: #b3b3b3;
+	--border-primary: #3d3d3d;
+	--brand-orange: #ffa116;
+	--brand-orange-s: #c17a0f;
+}
+
+.light-mode {
+	--bg-primary: #f3f4f6;
+	--bg-secondary: #ffffff;
+	--bg-tertiary: #ffffff;
+	--bg-layer-1: #ffffff;
+	--bg-layer-2: #f9fafb;
+	--bg-fill-2: #e5e7eb;
+	--bg-fill-3: #f3f4f6;
+	--text-primary: #111827;
+	--text-secondary: #374151;
+	--text-tertiary: #4b5563;
+	--border-primary: #d1d5db;
+	--brand-orange: #e67e22;
+	--brand-orange-s: #d35400;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* RESET */
+* {
+	box-sizing: border-box;
+	padding: 0;
+	margin: 0;
+}
+
+body {
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+		"Open Sans", "Helvetica Neue", sans-serif;
+	height: 100vh;
+	background-color: var(--bg-primary);
+	color: var(--text-primary);
+	transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+@layer components {
+	.preferenceBtn {
+		@apply relative rounded px-3 py-1.5 font-medium items-center transition-all focus:outline-none inline-flex ml-auto p-1 mr-2 hover:bg-dark-fill-3;
+	}
+
+	.preferenceBtn-tooltip {
+		@apply absolute w-auto p-2 text-sm m-2 min-w-max translate-x-3 right-0 top-5 z-10 rounded-md shadow-md
+		text-dark-layer-2 bg-gray-200 origin-center scale-0 transition-all duration-100 ease-linear group-hover:scale-100;
+	}
+}
+
+/* ── Dark/Light scrollbar ── */
+::-webkit-scrollbar { width: 0.5rem; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border-primary); }
+
+/* ── Code Editor ── */
+.cm-scroller, .cm-gutters { background-color: var(--bg-layer-1) !important; }
+.cm-focused { outline: none !important; }
+.light-mode .cm-content { color: var(--text-primary) !important; }
+.light-mode .cm-lineNumbers { color: var(--text-tertiary) !important; }
+
+/* ── Split panels ── */
+.split { display: flex; flex-direction: row; }
+
+.gutter {
+	background-color: var(--bg-layer-2);
+	background-repeat: no-repeat;
+	background-position: 50%;
+}
+.gutter:hover { background-color: #0a84ff; }
+
+.gutter.gutter-horizontal {
+	background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==");
+	cursor: col-resize;
+}
+
+.gutter.gutter-vertical {
+	background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=");
+	cursor: row-resize;
+}
+
+/* ── Code blocks ── */
+code {
+	border-radius: 5px;
+	border-width: 1px;
+	font-family: sans-serif;
+	font-size: 0.75rem;
+	font-weight: 500;
+	line-height: 1rem;
+	padding: 0.125rem;
+	letter-spacing: 1px;
+	white-space: pre-wrap;
+	background-color: var(--bg-fill-3);
+	border-color: var(--border-primary);
+	color: var(--text-tertiary);
+}
+
+.example-card pre {
+	background-color: var(--bg-fill-3);
+	border-radius: 0.5rem;
+	color: var(--text-tertiary);
+	font-size: 0.98rem;
+	line-height: 1.25rem;
+	margin-bottom: 1rem;
+	margin-top: 1rem;
+	padding: 1rem;
+	white-space: pre-wrap;
+}
+.example-card pre strong {
+	color: var(--text-primary);
+	font-size: 1rem;
+}
+
+/* ════════════════════════════════════════
+   FORCE READABILITY IN LIGHT MODE
+   ════════════════════════════════════════ */
+
+.light-mode .text-white,
+.light-mode .text-dark-gray-8 {
+	color: var(--text-primary) !important;
+}
+
+.light-mode .text-gray-300,
+.light-mode .text-gray-400,
+.light-mode .text-gray-500,
+.light-mode .text-gray-600,
+.light-mode .text-dark-gray-6,
+.light-mode .text-dark-gray-7 {
+	color: var(--text-secondary) !important;
+}
+
+/* Modal and Input Overrides */
+.light-mode .bg-dark-layer-1,
+.light-mode .bg-dark-layer-2,
+.light-mode .bg-dark-fill-3,
+.light-mode .bg-dark-fill-2 {
+	background-color: var(--bg-secondary) !important;
+}
+
+.light-mode input,
+.light-mode textarea,
+.light-mode select {
+	background-color: var(--bg-fill-3) !important;
+	color: var(--text-primary) !important;
+	border: 1px solid var(--border-primary) !important;
+}
+
+.light-mode input::placeholder,
+.light-mode textarea::placeholder {
+	color: var(--text-tertiary) !important;
+}
+
+/* Labels */
+.light-mode label {
+	color: var(--text-secondary) !important;
+}
+
+.light-mode .border-dark-fill-3,
+.light-mode .border-dark-divider-border-2 {
+	border-color: var(--border-primary) !important;
+}
+
+/* Navbar Visibility Fixes - Light Navbar in Light Mode */
+.light-mode nav {
+	background-color: var(--bg-secondary) !important;
+	border-bottom: 1px solid var(--border-primary) !important;
+	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Make LeetClone text and all nav text black in light mode */
+.light-mode nav .text-white,
+.light-mode nav span,
+.light-mode nav p,
+.light-mode nav div:not(.bg-brand-orange) {
+	color: var(--text-primary) !important;
+}
+
+.light-mode nav .text-gray-400,
+.light-mode nav .text-dark-gray-7 {
+	color: var(--text-secondary) !important;
+}
+
+/* Make the logo image visible in light mode */
+.light-mode nav img {
+	filter: brightness(0) !important;
+}
+
+/* Specific Fix for Auth Page and Dashboard background */
+.light-mode .bg-\[\#1a1a1a\],
+.light-mode .bg-\[\#0d1117\],
+.light-mode .bg-dark-layer-2 {
+	background-color: var(--bg-primary) !important;
+}
+
+.light-mode .shadow-2xl {
+	box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Alert Overrides for Light Mode */
+.light-mode .bg-green-900\/20,
+.light-mode .bg-green-900\/30 {
+	background-color: #ecfdf5 !important;
+	border-color: #10b98133 !important;
+}
+.light-mode .bg-green-900\/20 .text-green-400,
+.light-mode .bg-green-900\/30 .text-green-400 {
+	color: #059669 !important;
+}
+
+.light-mode .bg-red-900\/30 {
+	background-color: #fef2f2 !important;
+	border-color: #ef444433 !important;
+}
+.light-mode .bg-red-900\/30 .text-red-400 {
+	color: #dc2626 !important;
+}
+
+/* Problems table headers */
+.light-mode .grid .text-gray-400 {
+	color: var(--text-secondary) !important;
+}
