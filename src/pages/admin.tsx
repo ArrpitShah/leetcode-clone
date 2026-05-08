@@ -292,7 +292,7 @@ export default function AdminPage() {
       setLoading(false);
     };
     init();
-  }, []);
+  }, [router]);
 
   const fetchAll = async () => {
     const [probRes, subRes, userRes] = await Promise.all([

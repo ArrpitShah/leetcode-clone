@@ -114,7 +114,8 @@ const Playground: React.FC<PlaygroundProps> = ({ problem, setSuccess, setSolved,
     dropdownIsOpen: false,
   });
 
-  const { query: { pid } } = useRouter();
+  const router = useRouter();
+  const { query: { pid } } = router;
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {

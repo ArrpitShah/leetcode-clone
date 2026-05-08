@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Problem } from "@/utils/types/problem";
 import { supabase } from "@/supabase/supabase";
 import { AiFillLike, AiFillDislike, AiOutlineLoading3Quarters } from "react-icons/ai";
@@ -70,70 +70,8 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
     setLocalStarred(isStarred);
   }, [isStarred]);
 
-  useEffect(() => {
-    if (submitResult) {
-      setActiveTab("submissions");
-      setSelectedSubmission(null);
-      fetchSubmissions();
-    }
-  }, [submitResult]);
-
-  // Auth effect for user, keeping existing logic
-  useEffect(() => {
-    if (!user) { // If user logs out, reset local states that depend on user
-      setLiked(false);
-      setDisliked(false);
-      setLocalStarred(false);
-      setSolved(false);
-      // setStarred(false); // Local starred state removed, using prop isStarred
-      setNotesContent(""); // Clear notes
-      setCurrentProblem(null); // Clear problem details if user changes
-      setSubmissions([]);
-      setSelectedSubmission(null);
-      setActiveTab("description"); // Reset tab
-      }    // Existing auth listener
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        // Fetch related user data only if user is present
-        fetchUserData(session.user.id);
-        fetchNotes(session.user.id); // Fetch notes when user logs in
-      }
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchUserData(session.user.id);
-        fetchNotes(session.user.id); // Fetch notes when user logs in
-      } else {
-        // Reset states when user logs out
-        setLiked(false);
-        setDisliked(false);
-        setLocalStarred(false);
-        setSolved(false);
-        setStarred(false); // Ensure local starred state is reset too if needed
-        setNotesContent(""); // Clear notes
-        setCurrentProblem(null);
-        setSubmissions([]);
-        setSelectedSubmission(null);
-        setActiveTab("description"); // Reset tab
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, []); // Dependency array for auth listener
-
-  // Fetch problem details, keeping existing logic
-  useEffect(() => {
-    const fetchProblem = async () => {
-      const { data } = await supabase
-        .from("problems").select("*").eq("id", problem.id).single();
-      if (data) setCurrentProblem(data);
-    };
-    fetchProblem();
-  }, [problem.id]);
-
   // Fetch user-specific data (likes, dislikes, solved, stars)
-  const fetchUserData = async (userId: string) => {
+  const fetchUserData = useCallback(async (userId: string) => {
     const { data: solvedData } = await supabase
       .from("solved_problems").select("*")
       .eq("user_id", userId).eq("problem_id", problem.id).single();
@@ -146,17 +84,10 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
       setLiked(likedData.type === "like");
       setDisliked(likedData.type === "dislike");
     }
-
-    // Starred data is now managed by props, but for consistency with other fetches:
-    // If you need to fetch initial starred state here as well (though it's passed as prop)
-    // const { data: starredData } = await supabase
-    //   .from("problem_stars").select("*")
-    //   .eq("user_id", userId).eq("problem_id", problem.id).single();
-    // if (starredData) setStarred(true); // This local starred state might be redundant now
-  };
+  }, [problem.id]);
 
   // Fetch submissions
-  const fetchSubmissions = async () => {
+  const fetchSubmissions = useCallback(async () => {
     if (!user) return;
     setLoadingSubmissions(true);
     const { data } = await supabase
@@ -165,11 +96,69 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
       .order("created_at", { ascending: false });
     if (data) setSubmissions(data);
     setLoadingSubmissions(false);
-  };
+  }, [user, problem.id]);
+
+  // --- Notes Handlers ---
+  const fetchNotes = useCallback(async (userId: string) => {
+    if (!userId) return;
+    setLoadingNotes(true);
+    const { data, error } = await supabase
+      .from("problem_notes")
+      .select("content")
+      .eq("user_id", userId)
+      .eq("problem_id", problem.id)
+      .single();
+
+    if (error && error.code !== "PGRST116") { // Ignore "0 rows" error if no note exists
+      console.error("Error fetching notes:", error);
+      toast.error("Could not load notes.", { position: "top-center", theme: "dark" });
+    } else if (data) {
+      setNotesContent(data.content || "");
+    }
+    setLoadingNotes(false);
+  }, [problem.id]);
+
+  useEffect(() => {
+    if (submitResult) {
+      setActiveTab("submissions");
+      setSelectedSubmission(null);
+      fetchSubmissions();
+    }
+  }, [submitResult, fetchSubmissions]);
+
+  // Auth effect for user, keeping existing logic
+  useEffect(() => {
+    if (user) {
+      // Fetch related user data only if user is present
+      fetchUserData(user.id);
+      fetchNotes(user.id); // Fetch notes when user logs in
+    } else {
+      // If user logs out, reset local states that depend on user
+      setLiked(false);
+      setDisliked(false);
+      setLocalStarred(false);
+      setSolved(false);
+      setNotesContent(""); // Clear notes
+      setCurrentProblem(null); // Clear problem details if user changes
+      setSubmissions([]);
+      setSelectedSubmission(null);
+      setActiveTab("description"); // Reset tab
+    }
+  }, [user, fetchUserData, fetchNotes]);
+
+  // Fetch problem details, keeping existing logic
+  useEffect(() => {
+    const fetchProblem = async () => {
+      const { data } = await supabase
+        .from("problems").select("*").eq("id", problem.id).single();
+      if (data) setCurrentProblem(data);
+    };
+    fetchProblem();
+  }, [problem.id]);
 
   useEffect(() => {
     if (activeTab === "submissions") fetchSubmissions();
-  }, [activeTab, user]);
+  }, [activeTab, fetchSubmissions]);
 
   // --- Like/Dislike Handlers ---
   const handleLike = async () => {

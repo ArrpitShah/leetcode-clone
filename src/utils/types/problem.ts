@@ -28,6 +28,6 @@ export type DBProblem = {
 	likes: number;
 	dislikes: number;
 	order: number;
-	videoId?: string;
+	video_id?: string;
 	link?: string;
 };

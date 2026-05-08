@@ -44,7 +44,7 @@ export default function LeaderboardPage() {
       setLoading(false);
     };
     init();
-  }, []);
+  }, [router]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

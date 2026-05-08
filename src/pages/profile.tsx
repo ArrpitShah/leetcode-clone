@@ -208,7 +208,7 @@ export default function ProfilePage() {
       setLoading(false);
     };
     init();
-  }, []);
+  }, [router]);
 
   const handleSaveProfile = async (newProfile: UserProfile) => {
     if (!user) return;

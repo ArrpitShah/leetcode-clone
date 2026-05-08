@@ -48,7 +48,7 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({ setLoadingProblems }) => 
       setLoadingProblems(false)
     }
     fetchProblems()
-  }, [])
+  }, [setLoadingProblems])
 
   // Fetch solved problems for current user
   useEffect(() => {

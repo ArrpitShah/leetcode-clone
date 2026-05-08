@@ -153,7 +153,7 @@ export default function AuthPage() {
 
               <h2 className="text-white font-semibold text-xl mb-1">Reset Password</h2>
               <p className="text-gray-400 text-sm mb-5">
-                Enter your email and we'll send you a reset link.
+                Enter your email and we&apos;ll send you a reset link.
               </p>
 
               {success ? (
