@@ -4,8 +4,7 @@ import useHasMounted from "@/hooks/useHasMounted";
 import { problems } from "@/utils/problems";
 import { Problem } from "@/utils/types/problem";
 import React, { useEffect, useState } from "react";
-import { supabase } from "@/supabase/supabase"; // Import supabase
-import { FiStar } from "react-icons/fi"; // Import FiStar icon
+import { supabase } from "@/supabase/supabase";
 
 type ProblemPageProps = {
 	problem: Problem;
@@ -17,7 +16,6 @@ const ProblemPage: React.FC<ProblemPageProps> = ({ problem }) => {
 	const [user, setUser] = useState<any>(null);
 	const [starredProblems, setStarredProblems] = useState<string[]>([]);
 
-	// Fetch user and their starred problems
 	useEffect(() => {
 		const loadUserData = async () => {
 			const { data: { session } } = await supabase.auth.getSession();
@@ -31,7 +29,7 @@ const ProblemPage: React.FC<ProblemPageProps> = ({ problem }) => {
 				if (session?.user) {
 					fetchStarredProblems(session.user.id);
 				} else {
-					setStarredProblems([]); // Clear starred problems if user logs out
+					setStarredProblems([]);
 				}
 			});
 			return () => subscription.unsubscribe();
@@ -39,7 +37,6 @@ const ProblemPage: React.FC<ProblemPageProps> = ({ problem }) => {
 		loadUserData();
 	}, []);
 
-	// Function to fetch starred problems
 	const fetchStarredProblems = async (userId: string) => {
 		const { data, error } = await supabase
 			.from('user_starred_problems')
@@ -53,7 +50,6 @@ const ProblemPage: React.FC<ProblemPageProps> = ({ problem }) => {
 		}
 	};
 
-	// Function to toggle bookmark (adapted from ProblemsTable)
 	const handleToggleBookmark = async (problemId: string) => {
 		if (!user) {
 			alert('Please log in to bookmark problems.');
@@ -65,7 +61,6 @@ const ProblemPage: React.FC<ProblemPageProps> = ({ problem }) => {
 		try {
 			let dbError = null;
 			if (isStarred) {
-				// Remove bookmark
 				const { error } = await supabase
 					.from('user_starred_problems')
 					.delete()
@@ -73,12 +68,9 @@ const ProblemPage: React.FC<ProblemPageProps> = ({ problem }) => {
 					.eq('problem_id', problemId);
 				dbError = error;
 			} else {
-				// Add bookmark
 				const { error } = await supabase
 					.from('user_starred_problems')
-					.insert([
-						{ user_id: user.id, problem_id: problemId },
-					]);
+					.insert([{ user_id: user.id, problem_id: problemId }]);
 				dbError = error;
 			}
 
@@ -86,7 +78,6 @@ const ProblemPage: React.FC<ProblemPageProps> = ({ problem }) => {
 				console.error('Error toggling bookmark:', dbError);
 				alert('Failed to update bookmark status. Please try again.');
 			} else {
-				// Update local state
 				setStarredProblems(prev =>
 					isStarred
 						? prev.filter(id => id !== problemId)
@@ -106,19 +97,16 @@ const ProblemPage: React.FC<ProblemPageProps> = ({ problem }) => {
 			<Topbar problemPage />
 			<Workspace
 				problem={problem}
-				user={user} // Pass user to Workspace
-				starredProblems={starredProblems} // Pass starred problems to Workspace
-				handleToggleBookmark={handleToggleBookmark} // Pass handler to Workspace
-				currentProblemId={problem.id} // Pass current problem ID
+				user={user}
+				starredProblems={starredProblems}
+				handleToggleBookmark={handleToggleBookmark}
+				currentProblemId={problem.id}
 			/>
 		</div>
 	);
 };
 export default ProblemPage;
 
-// fetch the local data
-//  SSG
-// getStaticPaths => it create the dynamic routes
 export async function getStaticPaths() {
 	const paths = Object.keys(problems).map((key) => ({
 		params: { pid: key },
@@ -130,8 +118,6 @@ export async function getStaticPaths() {
 	};
 }
 
-// getStaticProps => it fetch the data
-
 export async function getStaticProps({ params }: { params: { pid: string } }) {
 	const { pid } = params;
 	const problem = problems[pid];
@@ -141,12 +127,14 @@ export async function getStaticProps({ params }: { params: { pid: string } }) {
 			notFound: true,
 		};
 	}
-	const serializableProblem = { ...problem };
-    delete serializableProblem.handlerFunction;
+
+	// FIX: cast to any to allow delete on non-optional property
+	const serializableProblem = { ...problem } as any;
+	delete serializableProblem.handlerFunction;
 
 	return {
 		props: {
-			problem: serializableProblem, // Pass the serializable version
+			problem: serializableProblem,
 		},
 	};
 }
