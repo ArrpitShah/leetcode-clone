@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { Problem } from "@/utils/types/problem";
 import { supabase } from "@/supabase/supabase";
 import { AiFillLike, AiFillDislike, AiOutlineLoading3Quarters } from "react-icons/ai";
 import { BsCheck2Circle } from "react-icons/bs";
 import { TiStarOutline, TiStar } from "react-icons/ti";
-import { FiStar } from "react-icons/fi"; // Import FiStar icon
 import { toast } from "react-toastify";
 import { SubmitResult } from "../Playground/Playground";
 import ProblemDiscussion from "@/components/Workspace/ProblemDescription/ProblemDiscussion";
@@ -33,7 +33,6 @@ type Submission = {
   code: string;
 };
 
-// Add 'notes' to TabType
 type TabType = "description" | "editorial" | "solutions" | "submissions" | "discussion" | "notes";
 
 const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
@@ -41,7 +40,6 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
   _solved,
   submitResult,
   onClearResult,
-  // Destructure new props
   user,
   isStarred,
   handleToggleBookmark,
@@ -49,9 +47,7 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
 }) => {
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
-  // Use isStarred from props directly, local state is redundant if props are stable
-  // const [starred, setStarred] = useState(false); 
-  const [localStarred, setLocalStarred] = useState(isStarred); // Use local state for immediate UI feedback
+  const [localStarred, setLocalStarred] = useState(isStarred);
   const [solved, setSolved] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [currentProblem, setCurrentProblem] = useState<any>(null);
@@ -60,7 +56,6 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
 
-  // State and handlers for Notes
   const [notesContent, setNotesContent] = useState("");
   const [loadingNotes, setLoadingNotes] = useState(false);
   const [isEditingNotes, setIsEditingNotes] = useState(false);
@@ -70,7 +65,7 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
     setLocalStarred(isStarred);
   }, [isStarred]);
 
-  // Fetch user-specific data (likes, dislikes, solved, stars)
+  // Fetch user-specific data (likes, dislikes, solved)
   const fetchUserData = useCallback(async (userId: string) => {
     const { data: solvedData } = await supabase
       .from("solved_problems").select("*")
@@ -98,7 +93,7 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
     setLoadingSubmissions(false);
   }, [user, problem.id]);
 
-  // --- Notes Handlers ---
+  // Fetch notes — single definition using useCallback
   const fetchNotes = useCallback(async (userId: string) => {
     if (!userId) return;
     setLoadingNotes(true);
@@ -109,7 +104,7 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
       .eq("problem_id", problem.id)
       .single();
 
-    if (error && error.code !== "PGRST116") { // Ignore "0 rows" error if no note exists
+    if (error && error.code !== "PGRST116") {
       console.error("Error fetching notes:", error);
       toast.error("Could not load notes.", { position: "top-center", theme: "dark" });
     } else if (data) {
@@ -126,27 +121,23 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
     }
   }, [submitResult, fetchSubmissions]);
 
-  // Auth effect for user, keeping existing logic
   useEffect(() => {
     if (user) {
-      // Fetch related user data only if user is present
       fetchUserData(user.id);
-      fetchNotes(user.id); // Fetch notes when user logs in
+      fetchNotes(user.id);
     } else {
-      // If user logs out, reset local states that depend on user
       setLiked(false);
       setDisliked(false);
       setLocalStarred(false);
       setSolved(false);
-      setNotesContent(""); // Clear notes
-      setCurrentProblem(null); // Clear problem details if user changes
+      setNotesContent("");
+      setCurrentProblem(null);
       setSubmissions([]);
       setSelectedSubmission(null);
-      setActiveTab("description"); // Reset tab
+      setActiveTab("description");
     }
   }, [user, fetchUserData, fetchNotes]);
 
-  // Fetch problem details, keeping existing logic
   useEffect(() => {
     const fetchProblem = async () => {
       const { data } = await supabase
@@ -166,15 +157,14 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
     if (updating) return;
     setUpdating(true);
     try {
-      // Logic for updating likes/dislikes (existing)
       const currentLikes = currentProblem?.likes || 0;
       const currentDislikes = currentProblem?.dislikes || 0;
 
-      if (liked) { // If currently liked, unlike
+      if (liked) {
         await supabase.from("problem_likes").delete().eq("user_id", user.id).eq("problem_id", problem.id);
         setCurrentProblem((p: any) => ({ ...p, likes: currentLikes - 1 }));
         setLiked(false);
-      } else { // If not liked, like it (and remove dislike if active)
+      } else {
         await supabase.from("problem_likes").upsert({ user_id: user.id, problem_id: problem.id, type: "like" }, { onConflict: "user_id,problem_id" });
         setCurrentProblem((p: any) => ({ ...p, likes: currentLikes + 1, dislikes: disliked ? currentDislikes - 1 : currentDislikes }));
         setLiked(true);
@@ -196,11 +186,11 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
       const currentLikes = currentProblem?.likes || 0;
       const currentDislikes = currentProblem?.dislikes || 0;
 
-      if (disliked) { // If currently disliked, undislike
+      if (disliked) {
         await supabase.from("problem_likes").delete().eq("user_id", user.id).eq("problem_id", problem.id);
         setCurrentProblem((p: any) => ({ ...p, dislikes: currentDislikes - 1 }));
         setDisliked(false);
-      } else { // If not disliked, dislike it (and remove like if active)
+      } else {
         await supabase.from("problem_likes").upsert({ user_id: user.id, problem_id: problem.id, type: "dislike" }, { onConflict: "user_id,problem_id" });
         setCurrentProblem((p: any) => ({ ...p, dislikes: currentDislikes + 1, likes: liked ? currentLikes - 1 : currentLikes }));
         setDisliked(true);
@@ -215,40 +205,19 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
   };
 
   // --- Star/Bookmark Handler ---
-  // This function now uses the passed-down handler from the page
   const handleStarClick = async () => {
     if (!user) {
       toast.error("Please login to bookmark problems.", { position: "top-center", theme: "dark" });
       return;
     }
     await handleToggleBookmark(currentProblemId);
-    // Update local state immediately for UI feedback, assuming prop will update soon
-    setLocalStarred(!localStarred); 
+    setLocalStarred(!localStarred);
   };
 
-  // --- Notes Handlers ---
-  const fetchNotes = async (userId: string) => {
-    if (!userId) return;
-    setLoadingNotes(true);
-    const { data, error } = await supabase
-      .from("problem_notes")
-      .select("content")
-      .eq("user_id", userId)
-      .eq("problem_id", problem.id)
-      .single();
-
-    if (error && error.code !== "PGRST116") { // Ignore "0 rows" error if no note exists
-      console.error("Error fetching notes:", error);
-      toast.error("Could not load notes.", { position: "top-center", theme: "dark" });
-    } else if (data) {
-      setNotesContent(data.content || "");
-    }
-    setLoadingNotes(false);
-  };
-
+  // --- Save Notes Handler ---
   const saveNotes = async () => {
     if (!user) { toast.error("Please login to save notes.", { position: "top-center", theme: "dark" }); return; }
-    if (updating) return; // Reuse updating state for saving notes
+    if (updating) return;
     setUpdating(true);
     try {
       const { error } = await supabase
@@ -262,7 +231,7 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
         toast.error("Failed to save notes. Please try again.", { position: "top-center", theme: "dark" });
       } else {
         toast.success("Notes saved successfully!", { position: "top-center", theme: "dark" });
-        setIsEditingNotes(false); // Exit editing mode after saving
+        setIsEditingNotes(false);
       }
     } catch (error: any) {
       console.error("An unexpected error occurred while saving notes:", error);
@@ -272,7 +241,6 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
     }
   };
 
-  // --- Tab management ---
   const difficultyClass =
     currentProblem?.difficulty === "Easy" ? "text-dark-green-s" :
     currentProblem?.difficulty === "Medium" ? "text-dark-yellow" : "text-dark-pink";
@@ -283,14 +251,13 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
     });
   };
 
-  // Add 'notes' tab
   const tabs: { id: TabType; label: string }[] = [
     { id: "description", label: "Description" },
     { id: "editorial",   label: "Editorial" },
     { id: "solutions",   label: "Solutions" },
     { id: "submissions", label: "Submissions" },
     { id: "discussion",  label: "Discussion" },
-    { id: "notes",       label: "Notes" }, // New Notes tab
+    { id: "notes",       label: "Notes" },
   ];
 
   return (
@@ -306,8 +273,7 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
               setActiveTab(tab.id);
               if (tab.id !== "submissions") onClearResult();
               setSelectedSubmission(null);
-              if (tab.id !== "notes") setIsEditingNotes(false); // Exit editing mode if not on notes tab
-              // Fetch notes when switching to notes tab
+              if (tab.id !== "notes") setIsEditingNotes(false);
               if (tab.id === "notes" && user) fetchNotes(user.id);
             }}
             className={`px-4 py-[10px] text-xs cursor-pointer whitespace-nowrap
@@ -326,9 +292,8 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
       {activeTab === "description" && (
         <div className="flex px-0 py-4 h-[calc(100vh-94px)] overflow-y-auto">
           <div className="px-5 w-full">
-            <div className="flex items-center justify-between mb-2"> {/* Added justify-between */}
+            <div className="flex items-center justify-between mb-2">
               <div className="flex-1 mr-2 text-lg text-white font-medium">{problem.title}</div>
-              {/* Bookmark Icon - moved here to be alongside title */}
               <div className="cursor-pointer p-2 hover:bg-dark-fill-3 rounded" onClick={handleStarClick}>
                 {localStarred ? (
                   <TiStar className="text-dark-yellow text-xl" />
@@ -363,12 +328,6 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
                   disliked ? <AiFillDislike className="text-dark-blue-s" /> : <AiFillDislike />}
                 <span className="text-xs">{currentProblem?.dislikes ?? 0}</span>
               </div>
-
-              {/* Star icon moved up to be next to title */}
-              {/* <div className="cursor-pointer hover:bg-dark-fill-3 rounded p-[3px]
-                text-xl text-dark-gray-6" onClick={handleStar}>
-                {starred ? <TiStar className="text-dark-yellow" /> : <TiStarOutline />}
-              </div> */}
             </div>
 
             <div className="text-white text-sm mt-3">
@@ -379,7 +338,16 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
               {problem.examples.map((example, index) => (
                 <div key={example.id} className="mb-4">
                   <p className="font-medium text-white mb-2">Example {index + 1}:</p>
-                  {example.img && <img src={example.img} alt="example" className="mt-2 mb-2" />}
+                  {example.img && (
+                    <Image
+                      src={example.img}
+                      alt="example"
+                      className="mt-2 mb-2"
+                      width={500}
+                      height={300}
+                      style={{ maxWidth: "100%", height: "auto" }}
+                    />
+                  )}
                   <div className="example-card">
                     <pre className="text-sm">
                       <strong className="text-white">Input: </strong>{example.inputText}{"\n"}
@@ -571,7 +539,7 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
         </div>
       )}
 
-      {/* DISCUSSION TAB — ProblemDiscussion component */}
+      {/* DISCUSSION TAB */}
       {activeTab === "discussion" && (
         <ProblemDiscussion problemId={problem.id} />
       )}
@@ -592,7 +560,7 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
               <div className="flex justify-between items-center">
                 <h3 className="text-white font-medium text-sm">Your Notes</h3>
                 {!isEditingNotes ? (
-                  <button 
+                  <button
                     onClick={() => setIsEditingNotes(true)}
                     className="text-xs text-brand-orange hover:underline"
                   >
@@ -600,15 +568,15 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
                   </button>
                 ) : (
                   <div className="flex gap-2">
-                    <button 
-                      onClick={saveNotes} 
+                    <button
+                      onClick={saveNotes}
                       disabled={updating}
                       className="px-3 py-1 bg-brand-orange text-white text-xs rounded-lg transition-colors disabled:opacity-50"
                     >
                       {updating ? <AiOutlineLoading3Quarters className="animate-spin" /> : "Save"}
                     </button>
-                    <button 
-                      onClick={() => setIsEditingNotes(false)} 
+                    <button
+                      onClick={() => setIsEditingNotes(false)}
                       className="px-3 py-1 bg-dark-layer-2 text-gray-300 text-xs rounded-lg hover:bg-dark-fill-3 transition-colors"
                     >
                       Cancel
@@ -616,7 +584,7 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
                   </div>
                 )}
               </div>
-              
+
               {isEditingNotes ? (
                 <textarea
                   value={notesContent}
