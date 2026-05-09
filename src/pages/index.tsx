@@ -29,7 +29,7 @@ export default function Home() {
     });
 
     return () => subscription.unsubscribe();
-  }, [router]);
+  }, [router]); // FIX: added router to dependency array
 
   if (loading) {
     return (

@@ -295,9 +295,9 @@ export default function AuthPage() {
                 </button>
               </div>
 
-              {/* Switch mode */}
+              {/* Switch mode — FIX: escaped apostrophe in "Don't" */}
               <p className="text-center text-xs text-gray-400 mt-5">
-                {mode === "login" ? "Don't have an account? " : "Already have an account? "}
+                {mode === "login" ? "Don&apos;t have an account? " : "Already have an account? "}
                 <button
                   onClick={() => { setMode(mode === "login" ? "register" : "login"); clearMessages(); }}
                   className="text-brand-orange hover:underline"
