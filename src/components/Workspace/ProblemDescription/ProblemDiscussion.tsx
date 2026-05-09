@@ -51,7 +51,6 @@ export default function ProblemDiscussion({ problemId }: ProblemDiscussionProps)
     if (!newComment.trim() || !user) return;
     setPosting(true);
 
-    // maybeSingle() — error nahi throw karta agar row nahi milti
     let username = user.email?.split("@")[0] || "User";
     try {
       const { data: profileData } = await supabase
@@ -97,7 +96,8 @@ export default function ProblemDiscussion({ problemId }: ProblemDiscussionProps)
       .eq("id", comment.id);
     if (!error) {
       setComments(comments.map(c => c.id === comment.id ? { ...c, likes: newLikes } : c));
-      setLikedComments(new Set([...likedComments, comment.id]));
+      // FIX: Array.from use karo instead of spread on Set (downlevelIteration issue)
+      setLikedComments(new Set(Array.from(likedComments).concat(comment.id)));
     }
   };
 

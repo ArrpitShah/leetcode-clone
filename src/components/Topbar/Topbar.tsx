@@ -1,5 +1,6 @@
 import { supabase } from '@/supabase/supabase'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
@@ -55,7 +56,7 @@ const Topbar: React.FC<TopbarProps> = ({ problemPage }) => {
       <div className='flex items-center gap-2 sm:gap-4 shrink-0'>
         <Link href='/'>
           <div className='flex items-center'>
-            <img src='/logo-full.png' alt='Logo' className='h-[18px] sm:h-[22px] cursor-pointer' />
+            <Image src='/logo-full.png' alt='Logo' height={22} width={100} className='cursor-pointer' />
           </div>
         </Link>
         <div className='flex items-center gap-2 sm:gap-4 ml-4'>
